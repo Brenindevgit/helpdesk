@@ -28,7 +28,12 @@ public class TecnicoService {
     
     public Tecnico create(TecnicoDTO objDTO) {
         objDTO.setId(null);
-        Tecnico newObj = new Tecnico(objDTO);
+        Tecnico newObj = new Tecnico();
+
+        newObj.setNome(objDTO.getNome());
+        newObj.setCpf(objDTO.getCpf());
+        newObj.setEmail(objDTO.getEmail());
+        newObj.setSenha(objDTO.getSenha());
         return repository.save(newObj);
     }
 

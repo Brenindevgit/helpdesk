@@ -1,7 +1,7 @@
 package com.turmaa.helpdesk.domain.dtos;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import javax.validation.constraints.NotNull;
 
 import com.turmaa.helpdesk.domain.Chamado;
@@ -14,10 +14,10 @@ public class ChamadoDTO implements Serializable {
 	private Integer id;
 
 	@JsonFormat(pattern = "dd/MM/yyyy HH:mm")
-	private LocalDateTime dataAbertura;
+	private LocalDate dataAbertura;
 
 	@JsonFormat(pattern = "dd/MM/yyyy HH:mm")
-	private LocalDateTime dataFechamento;
+	private LocalDate dataFechamento;
 
 	@NotNull(message = "O campo PRIORIDADE é requerido")
 	private Integer prioridade;
@@ -79,19 +79,19 @@ public class ChamadoDTO implements Serializable {
 		this.id = id;
 	}
 
-	public LocalDateTime getDataAbertura() {
+	public LocalDate getDataAbertura() {
 		return dataAbertura;
 	}
 
-	public void setDataAbertura(LocalDateTime dataAbertura) {
+	public void setDataAbertura(LocalDate dataAbertura) {
 		this.dataAbertura = dataAbertura;
 	}
 
-	public LocalDateTime getDataFechamento() {
+	public LocalDate getDataFechamento() {
 		return dataFechamento;
 	}
 
-	public void setDataFechamento(LocalDateTime dataFechamento) {
+	public void setDataFechamento(LocalDate dataFechamento) {
 		this.dataFechamento = dataFechamento;
 	}
 

@@ -1,4 +1,4 @@
-package resources.exeptions;
+package resources.exceptions;
 
 import java.io.Serializable;
 

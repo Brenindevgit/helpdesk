@@ -1,6 +1,6 @@
 package com.turmaa.helpdesk.services;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,7 +61,7 @@ public class ChamadoService {
 		}
 		
 		if(objDTO.getStatus().equals(2)) {
-			chamado.setDataFechamento(LocalDateTime.now());
+			chamado.setDataFechamento(LocalDate.now());
 		}
 		
 		chamado.setTecnico(tecnico);
