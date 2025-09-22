@@ -1,4 +1,4 @@
-package resources;
+package com.turmaa.helpdesk.Resources;
 
 import java.net.URI;
 import java.util.List;

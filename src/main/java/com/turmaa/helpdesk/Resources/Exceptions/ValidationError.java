@@ -1,4 +1,4 @@
-package resources.exceptions;
+package com.turmaa.helpdesk.Resources.Exceptions;
 
 import java.util.ArrayList;
 import java.util.List;

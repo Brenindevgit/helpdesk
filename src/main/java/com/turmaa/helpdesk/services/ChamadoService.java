@@ -3,9 +3,7 @@ package com.turmaa.helpdesk.services;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
 import javax.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +16,9 @@ import com.turmaa.helpdesk.domains.enums.Status;
 import com.turmaa.helpdesk.repositories.ChamadoRepository;
 import com.turmaa.helpdesk.services.exceptions.ObjectNotFoundException;
 
-
+/**
+ * Classe de serviço que contém a lógica de negócio para as operações com Chamados.
+ */
 @Service
 public class ChamadoService {
 	
@@ -29,41 +29,69 @@ public class ChamadoService {
 	@Autowired
 	private ClienteService clienteService;
 	
+	/**
+	 * Busca um Chamado pelo seu ID.
+	 */
 	public Chamado findById(Integer id) {
 		Optional<Chamado> obj = repository.findById(id);
-		return obj.orElseThrow(()-> new ObjectNotFoundException("Objeto não encontrado! ID: " +id));
+		return obj.orElseThrow(()-> new ObjectNotFoundException("Objeto não encontrado! ID: " + id));
 	}
 	
+	/**
+	 * Retorna uma lista com todos os Chamados.
+	 */
 	public List<Chamado> findAll(){
 		return repository.findAll();
 	}
 	
-	
-	public Chamado create (ChamadoDTO objDTO) {
-		return repository.save(fromDTO(objDTO));
+	/**
+	 * Cria um novo Chamado no banco de dados.
+	 */
+	public Chamado create(@Valid ChamadoDTO objDTO) {
+		// Usa o método privado para criar uma nova instância de Chamado a partir do DTO.
+		return repository.save(newChamado(objDTO));
 	}
 	
+	/**
+	 * Atualiza um Chamado existente.
+	 */
 	public Chamado update(Integer id, @Valid ChamadoDTO objDTO) {
-		objDTO.setId(null);
-		Chamado oldObj = findById(id);
-		oldObj = fromDTO(objDTO);
-		return repository.save(oldObj);
+		objDTO.setId(id); // Seta o ID no DTO para garantir que estamos atualizando o chamado correto.
+		Chamado oldObj = findById(id); // Busca o chamado existente no banco.
+		
+		// Atualiza os dados do objeto 'oldObj' com base nas informações do DTO.
+		oldObj.setPrioridade(Prioridade.toEnum(objDTO.getPrioridade()));
+		oldObj.setStatus(Status.toEnum(objDTO.getStatus()));
+		oldObj.setTitulo(objDTO.getTitulo());
+		oldObj.setObservacoes(objDTO.getObservacoes());
+		
+		// Associa o técnico e o cliente (caso tenham sido alterados).
+		oldObj.setTecnico(tecnicoService.findById(objDTO.getTecnicoId()));
+		oldObj.setCliente(clienteService.findById(objDTO.getClienteId()));
+		
+		// Aplica a regra de negócio para data de fechamento.
+		if(oldObj.getStatus().equals(Status.ENCERRADO)) {
+			oldObj.setDataFechamento(LocalDate.now());
+		}
+		
+		return repository.save(oldObj); // Salva o objeto 'oldObj' atualizado.
 	}
 	
-	
-	private Chamado fromDTO(ChamadoDTO objDTO) {
+	/**
+	 * Método auxiliar privado para criar uma NOVA instância de Chamado a partir de um DTO.
+	 * Usado apenas no método create.
+	 */
+	private Chamado newChamado(ChamadoDTO objDTO) {
 		Tecnico tecnico = tecnicoService.findById(objDTO.getTecnicoId());
 		Cliente cliente = clienteService.findById(objDTO.getClienteId());
 		
 		Chamado chamado = new Chamado();
+		// Se o ID vier no DTO de criação (não deveria, mas por segurança), nós o setamos.
 		if(objDTO.getId() != null) {
 			chamado.setId(objDTO.getId());
 		}
 		
-		if(objDTO.getStatus().equals(2)) {
-			chamado.setDataFechamento(LocalDate.now());
-		}
-		
+		// Cria o chamado com os dados do DTO e as entidades de Técnico e Cliente encontradas.
 		chamado.setTecnico(tecnico);
 		chamado.setCliente(cliente);
 		chamado.setPrioridade(Prioridade.toEnum(objDTO.getPrioridade()));
@@ -73,11 +101,14 @@ public class ChamadoService {
 		
 		return chamado;
 	}
-	
-	
+	/**
+	 * Deleta um Chamado do banco de dados.
+	 * @param id O ID do chamado a ser deletado.
+	 */
 	public void delete(Integer id) {
-    	Chamado obj = findById(id); 	
-    	repository.deleteById(id);
-    }
-
+	    // A chamada ao findById(id) garante que o chamado existe antes de tentar deletar.
+	    // Se não existir, o próprio findById já lançará a exceção ObjectNotFoundException.
+	    findById(id);
+	    repository.deleteById(id);
+	}
 }
