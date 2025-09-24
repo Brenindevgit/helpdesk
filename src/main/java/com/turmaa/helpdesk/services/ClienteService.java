@@ -4,12 +4,13 @@ import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // IMPORTANTE: Adicionar este import
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.turmaa.helpdesk.domain.Pessoa;
 import com.turmaa.helpdesk.domain.Cliente;
 import com.turmaa.helpdesk.domain.dtos.ClienteDTO;
+import com.turmaa.helpdesk.domains.enums.Perfil; 
 import com.turmaa.helpdesk.repositories.PessoaRepository;
 import com.turmaa.helpdesk.repositories.ClienteRepository;
 import com.turmaa.helpdesk.services.exceptions.DataIntegrityViolationException;
@@ -22,12 +23,9 @@ public class ClienteService {
     private ClienteRepository repository;
     @Autowired
     private PessoaRepository pessoaRepository;
-
-    // 1. INJETANDO O CRIPTOGRAFADOR DE SENHA
     @Autowired
     private BCryptPasswordEncoder encoder;
-
-    // ... (métodos findById e findAll continuam iguais) ...
+    
     public Cliente findById(Integer id) {
         Optional<Cliente> obj = repository.findById(id);
         return obj.orElseThrow(() -> new ObjectNotFoundException("Objeto não encontrado! Id: " + id));
@@ -40,8 +38,14 @@ public class ClienteService {
     public Cliente create(ClienteDTO objDTO) {
         objDTO.setId(null);
         validaPorCpfEEmail(objDTO);
+        
+        // Adicionada regra de negócio.
+        // Para garantir a segurança, eu limpo qualquer perfil que possa ter sido enviado na requisição...
+        objDTO.getPerfis().clear();
+        // ...e adiciono manualmente apenas o perfil de CLIENTE.
+        objDTO.addPerfil(Perfil.CLIENTE);
+        
         Cliente newObj = new Cliente(objDTO);
-        // 2. CRIPTOGRAFANDO A SENHA ANTES DE SALVAR
         newObj.setSenha(encoder.encode(objDTO.getSenha()));
         return repository.save(newObj);
     }
@@ -51,12 +55,10 @@ public class ClienteService {
         Cliente oldObj = findById(id);
         validaPorCpfEEmail(objDTO);
         oldObj = new Cliente(objDTO);
-        // 2. CRIPTOGRAFANDO A SENHA ANTES DE SALVAR
         oldObj.setSenha(encoder.encode(objDTO.getSenha()));
         return repository.save(oldObj);
     }
     
-    // ... (método delete e validaPorCpfEEmail continuam iguais) ...
     public void delete(Integer id) {
         Cliente obj = findById(id);
         if(obj.getChamados().size() > 0) {

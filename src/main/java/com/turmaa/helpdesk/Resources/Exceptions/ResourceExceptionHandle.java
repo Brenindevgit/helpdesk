@@ -12,62 +12,34 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.turmaa.helpdesk.services.exceptions.DataIntegrityViolationException;
 import com.turmaa.helpdesk.services.exceptions.ObjectNotFoundException;
 
-@ControllerAdvice /*
-					 * serve para criar um único lugar para capturar e tratar exceções que podem ser
-					 * lançadas por qualquer um dos controladores.
-					 */
+/**
+ * Manipulador de exceções global para todos os controllers da aplicação.
+ * A anotação @ControllerAdvice permite que esta classe intercepte exceções
+ * lançadas por qualquer @RestController, centralizando o tratamento de erros.
+ */
+@ControllerAdvice
 public class ResourceExceptionHandle {
 
-	@ExceptionHandler(ObjectNotFoundException.class) /*
-														 * Quando esta anotação é combinada com a
-														 * anotação @ControllerAdvice, ela se torna global. Isso
-														 * significa que o método de tratamento de exceções pode
-														 * capturar e lidar com exceções lançadas por qualquer
-														 * controlador na sua aplicação.
-														 */
+	/**
+	 * Manipula exceções do tipo ObjectNotFoundException.
+	 * É acionado quando um serviço tenta buscar um objeto que não existe no banco.
+	 * @return ResponseEntity com status 404 (NOT_FOUND) e corpo padronizado.
+	 */
+	@ExceptionHandler(ObjectNotFoundException.class)
 	public ResponseEntity<StandardError> objectNotFoundException(ObjectNotFoundException ex,
 			HttpServletRequest request) {
-		/*
-		 * O método objectNotFoundException atua como um manipulador de exceções
-		 * (@ExceptionHandler). Ele é projetado para ser executado sempre que a exceção
-		 * ObjectNotFoundException é lançada em sua aplicação. O método recebe dois
-		 * parâmetros: ex: A exceção ObjectNotFoundException que foi capturada. request:
-		 * O objeto que representa a requisição HTTP original, que é usado para obter a
-		 * URI da requisição.
-		 */
-
+		
 		StandardError error = new StandardError(System.currentTimeMillis(), HttpStatus.NOT_FOUND.value(),
 				"Object Not Found", ex.getMessage(), request.getRequestURI());
 
-		/*
-		 * StandardError error = new StandardError(...): Aqui, um novo objeto
-		 * StandardError é criado. Esse objeto classe personalizada que criamos para
-		 * padronizar as mensagens de erro da nossa API. Os parâmetros do construtor
-		 * são:
-		 * 
-		 * System.currentTimeMillis(): O timestamp atual, para indicar quando o erro
-		 * ocorreu em milissegundos.
-		 * 
-		 * HttpStatus.NOT_FOUND.value(): O código de status HTTP 404.
-		 * 
-		 * "Object Not Found": Uma mensagem de erro genérica.
-		 * 
-		 * ex.getMessage(): A mensagem específica da exceção que foi lançada.
-		 * 
-		 * request.getRequestURI(): A URI da requisição que gerou o erro.
-		 */
-
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-
-		/*
-		 * Esta linha constrói e retorna a resposta HTTP.
-		 * ResponseEntity.status(HttpStatus.NOT_FOUND): Define o status da resposta como
-		 * 404 Not Found. .body(error): Coloca o objeto StandardError que acabamos de
-		 * criar no corpo da resposta.
-		 */
-
 	}
 
+	/**
+	 * Manipula exceções do tipo DataIntegrityViolationException.
+	 * Acionado quando uma operação viola uma regra de integridade de dados (ex: CPF duplicado).
+	 * @return ResponseEntity com status 400 (BAD_REQUEST) e corpo padronizado.
+	 */
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	public ResponseEntity<StandardError> dataIntegrityViolationException(DataIntegrityViolationException ex,
 			HttpServletRequest request) {
@@ -76,25 +48,27 @@ public class ResourceExceptionHandle {
 				"Data Violation", ex.getMessage(), request.getRequestURI());
 
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-
 	}
 	
+	/**
+	 * Manipula exceções do tipo MethodArgumentNotValidException.
+	 * Acionado quando a validação de um DTO anotado com @Valid falha.
+	 * @return ResponseEntity com status 400 (BAD_REQUEST) e um corpo ValidationError
+	 * contendo a lista de todos os campos que falharam na validação.
+	 */
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<StandardError> ValidationErrors(MethodArgumentNotValidException ex,
+	public ResponseEntity<StandardError> validationError(MethodArgumentNotValidException ex,
 			HttpServletRequest request) {
 
-//		ValidationError errors = new ValidationError(System.currentTimeMillis(), HttpStatus.BAD_REQUEST.value(),
-//				"Fields Validation Error", ex.getMessage(), request.getRequestURI());
-		
 		ValidationError errors = new ValidationError(System.currentTimeMillis(), HttpStatus.BAD_REQUEST.value(),
-				"Fields Validation Error", "Erro na validação dos campos", request.getRequestURI());
+				"Validation Error", "Erro na validação dos campos.", request.getRequestURI());
 
+		// Itera sobre todos os erros de campo encontrados na exceção...
 		for(FieldError x : ex.getBindingResult().getFieldErrors()) {
-			errors.addErrors(x.getField(), x.getDefaultMessage());
+			// ...e adiciona cada um na nossa lista de erros personalizada.
+			errors.addError(x.getField(), x.getDefaultMessage()); // CORREÇÃO: Método renomeado para addError
 		}
 		
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
-
 	}
-
 }

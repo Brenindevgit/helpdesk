@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -14,51 +13,68 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.turmaa.helpdesk.domains.enums.Perfil;;
+import com.turmaa.helpdesk.domains.enums.Perfil;
 
-// TODO: Auto-generated Javadoc
 /**
- * The Class Pessoa.
+ * Classe abstrata que serve como base para as entidades Cliente e Tecnico.
+ * Centraliza os atributos e comportamentos comuns a todas as pessoas no sistema.
+ * A anotação @Entity informa ao JPA que esta classe é uma tabela no banco de dados.
  */
 @Entity
-public abstract class Pessoa implements Serializable{
+public abstract class Pessoa implements Serializable {
 	
-	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
-	/** The id. */
+	/**
+	 * Identificador único da pessoa.
+	 * @Id indica que é a chave primária.
+	 * @GeneratedValue(strategy = GenerationType.IDENTITY) configura o auto incremento no banco.
+	 */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	protected Integer id;
 	
-	/** The nome. */
 	protected String nome;
 	
-	
-	/** The cpf. */
+	/**
+	 * CPF da pessoa.
+	 * @Column(unique = true) garante que não haverá dois CPFs iguais no banco.
+	 */
 	@Column(unique = true)
 	protected String cpf;
 	
-	/** The email. */
+	/**
+	 * E-mail da pessoa, usado para login.
+	 * @Column(unique = true) garante que não haverá dois e-mails iguais no banco.
+	 */
 	@Column(unique = true)
 	protected String email;
 	
-	/** The senha. */
+	/**
+	 * Senha do usuário. Será armazenada de forma criptografada.
+	 */
 	protected String senha;
 	
-	/** The perfis. */
+	/**
+	 * Conjunto de perfis (roles) do usuário.
+	 * @ElementCollection indica que os perfis serão armazenados em uma tabela separada (PERFIS).
+	 * FetchType.EAGER faz com que os perfis sejam sempre carregados junto com a Pessoa.
+	 */
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "PERFIS")
 	protected Set<Integer> perfis = new HashSet<>();
 	
-	/** The data criacao. */
+	/**
+	 * Data em que o cadastro da pessoa foi criado.
+	 * @JsonFormat formata a data no padrão dd/MM/yyyy ao ser convertida para JSON.
+	 */
 	@JsonFormat(pattern = "dd/MM/yyyy")
 	protected LocalDate dataCriacao = LocalDate.now();
 	
 	/**
-	 * Instantiates a new pessoa.
+	 * Construtor padrão.
+	 * Adiciona o perfil de CLIENTE por padrão a qualquer pessoa criada.
 	 */
 	public Pessoa() {
 		super();
@@ -66,13 +82,7 @@ public abstract class Pessoa implements Serializable{
 	}
 
 	/**
-	 * Instantiates a new pessoa.
-	 *
-	 * @param id the id
-	 * @param nome the nome
-	 * @param cpf the cpf
-	 * @param email the email
-	 * @param senha the senha
+	 * Construtor com parâmetros.
 	 */
 	public Pessoa(Integer id, String nome, String cpf, String email, String senha) {
 		super();
@@ -84,148 +94,73 @@ public abstract class Pessoa implements Serializable{
 		addPerfil(Perfil.CLIENTE);
 	}
 
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
 	public Integer getId() {
 		return id;
 	}
 
-	/**
-	 * Sets the id.
-	 *
-	 * @param id the new id
-	 */
 	public void setId(Integer id) {
 		this.id = id;
 	}
 
-	/**
-	 * Gets the nome.
-	 *
-	 * @return the nome
-	 */
 	public String getNome() {
 		return nome;
 	}
 
-	/**
-	 * Sets the nome.
-	 *
-	 * @param nome the new nome
-	 */
 	public void setNome(String nome) {
 		this.nome = nome;
 	}
 
-
-
-	/**
-	 * Gets the cpf.
-	 *
-	 * @return the cpf
-	 */
 	public String getCpf() {
 		return cpf;
 	}
 
-	/**
-	 * Sets the cpf.
-	 *
-	 * @param cpf the new cpf
-	 */
 	public void setCpf(String cpf) {
 		this.cpf = cpf;
 	}
 
-	/**
-	 * Gets the email.
-	 *
-	 * @return the email
-	 */
 	public String getEmail() {
 		return email;
 	}
 
-	/**
-	 * Sets the email.
-	 *
-	 * @param email the new email
-	 */
 	public void setEmail(String email) {
 		this.email = email;
 	}
 
-	/**
-	 * Gets the senha.
-	 *
-	 * @return the senha
-	 */
 	public String getSenha() {
 		return senha;
 	}
 
-	/**
-	 * Sets the senha.
-	 *
-	 * @param senha the new senha
-	 */
 	public void setSenha(String senha) {
 		this.senha = senha;
 	}
 
 	/**
-	 * Gets the perfis.
-	 *
-	 * @return the perfis
+	 * Retorna os perfis do usuário no formato Enum.
+	 * Realiza a conversão dos códigos (Integer) para os valores do Enum Perfil.
 	 */
 	public Set<Perfil> getPerfis() {
 		return perfis.stream().map(x -> Perfil.toEnum(x)).collect(Collectors.toSet());
 	}
 
 	/**
-	 * add a perfil.
-	 *
-	 * @param perfil the perfil
+	 * Adiciona um novo perfil ao usuário.
+	 * O perfil é armazenado como seu código numérico.
 	 */
 	public void addPerfil(Perfil perfil) {
 		this.perfis.add(perfil.getCodigo());
 	}
 
-	/**
-	 * Gets the data criacao.
-	 *
-	 * @return the data criacao
-	 */
 	public LocalDate getDataCriacao() {
 		return dataCriacao;
 	}
 
-	/**
-	 * Sets the data criacao.
-	 *
-	 * @param dataCriacao the new data criacao
-	 */
 	public void setDataCriacao(LocalDate dataCriacao) {
 		this.dataCriacao = dataCriacao;
 	}
 
-	
-	
 	/**
-	 * O método equals verifica se dois objetos são "iguais" com base em seus atributos,
-	 * enquanto o hashCode gera um código numérico que representa o objeto,
-	 * permitindo que coleções encontrem objetos de forma rápida.
-	 *
-	 * @return the int
-	 */
-	
-	/**
-	 * Hash code.
-	 *
-	 * @return the int
+	 * Compara objetos com base nos campos 'id' e 'cpf'.
+	 * Essencial para o JPA e para o funcionamento de coleções (Sets, Lists).
 	 */
 	@Override
 	public int hashCode() {
@@ -236,12 +171,6 @@ public abstract class Pessoa implements Serializable{
 		return result;
 	}
 
-	/**
-	 * Equals.
-	 *
-	 * @param obj the obj
-	 * @return true, if successful
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -263,10 +192,4 @@ public abstract class Pessoa implements Serializable{
 			return false;
 		return true;
 	}
-
-
-	
-	
-	
-	
 }
