@@ -3,7 +3,9 @@ package com.turmaa.helpdesk.Resources;
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,8 +45,7 @@ public class ClienteResources {
     
     /**
      * Endpoint para listar todos os Clientes.
-     * CORREÇÃO: Usamos hasAnyAuthority para checar a permissão exata ('ROLE_ADMIN')
-     * sem adicionar um prefixo 'ROLE_' duplicado.
+     * Acesso restrito a ADMIN e TECNICO.
      */
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TECNICO')")
     @GetMapping
@@ -56,9 +57,9 @@ public class ClienteResources {
 
     /**
      * Endpoint para criar um novo Cliente.
-     * CORREÇÃO: Usamos hasAnyAuthority.
+     * CORREÇÃO: @PreAuthorize REMOVIDO para permitir cadastro público.
      */
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TECNICO')")
+    // @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TECNICO')")  <-- COMENTADO/REMOVIDO
     @PostMapping
     public ResponseEntity<ClienteDTO> create(@Valid @RequestBody ClienteDTO objDTO) {
         Cliente newObj = service.create(objDTO);
@@ -68,7 +69,7 @@ public class ClienteResources {
 
     /**
      * Endpoint para atualizar um Cliente.
-     * CORREÇÃO: Usamos hasAnyAuthority.
+     * Acesso restrito a ADMIN e TECNICO.
      */
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TECNICO')")
     @PutMapping(value = "/{id}")
@@ -79,7 +80,7 @@ public class ClienteResources {
     
     /**
      * Endpoint para deletar um Cliente.
-     * CORREÇÃO: Usamos hasAnyAuthority.
+     * Acesso restrito a ADMIN e TECNICO.
      */
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TECNICO')")
     @DeleteMapping(value = "/{id}")
