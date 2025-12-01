@@ -6,14 +6,25 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize; 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.turmaa.helpdesk.domain.Chamado;
 import com.turmaa.helpdesk.domain.dtos.ChamadoDTO;
 import com.turmaa.helpdesk.services.ChamadoService;
 
+/**
+ * Controller REST para o recurso 'Chamado'.
+ * Expõe os endpoints da API para as operações de CRUD relacionadas à entidade Chamado.
+ */
 @RestController
 @RequestMapping(value = "/chamados")
 public class ChamadoResources {
@@ -33,47 +44,52 @@ public class ChamadoResources {
 	
 	/**
 	 * Endpoint para listar todos os Chamados.
-	 * Acesso restrito a ADMINS ou TECNICOS. Clientes não podem ver todos os chamados.
+	 * CORREÇÃO: Alterado para hasAnyAuthority para checar a permissão exata ('ROLE_ADMIN', 'ROLE_TECNICO').
 	 */
-	@PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')") // REGRA DE AUTORIZAÇÃO 
+	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TECNICO')")
 	@GetMapping
 	public ResponseEntity<List<ChamadoDTO>> findAll(){
 		List<Chamado> list = service.findAll();
-		List<ChamadoDTO> listDTO = list.stream().map(obj -> new ChamadoDTO(obj)).collect(Collectors.toList());
+		List<ChamadoDTO> listDTO = list.stream()
+									  .map(obj -> new ChamadoDTO(obj))
+									  .collect(Collectors.toList());
 		return ResponseEntity.ok().body(listDTO);
 	}
 	
 	/**
 	 * Endpoint para criar um novo Chamado.
-	 * Acesso restrito a CLIENTES (pois técnicos e admins não abrem chamados para si mesmos).
+	 * Acesso restrito a CLIENTES.
+	 * CORREÇÃO: Alterado para hasAnyAuthority.
 	 */
-	@PreAuthorize("hasAnyRole('CLIENTE')") // REGRA DE AUTORIZAÇÃO 
+	@PreAuthorize("hasAnyAuthority('ROLE_CLIENTE')")
 	@PostMapping
 	public ResponseEntity<ChamadoDTO> create (@Valid @RequestBody ChamadoDTO objDTO){
 		Chamado obj = service.create(objDTO);
-		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(obj.getId()).toUri();
+		URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+				.path("/{id}")
+				.buildAndExpand(obj.getId())
+				.toUri();
 		return ResponseEntity.created(uri).build();
 	}
 	
 	/**
 	 * Endpoint para atualizar um Chamado.
-	 * Acesso restrito a TECNICOS e ADMINS, que são quem gerenciam os chamados.
+	 * Acesso restrito a TECNICOS e ADMINS.
+	 * CORREÇÃO: Alterado para hasAnyAuthority.
 	 */
-	@PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')") // REGRA DE AUTORIZAÇÃO 
+	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TECNICO')")
 	@PutMapping(value = "/{id}")
 	public ResponseEntity<ChamadoDTO> update(@PathVariable Integer id, @Valid @RequestBody ChamadoDTO objDTO){
 		Chamado newOBJ = service.update(id, objDTO);
 		return ResponseEntity.ok().body(new ChamadoDTO(newOBJ));
 	}
 	
-	// OBS: O método DELETE para chamados pode não ser uma boa prática de negócio
-	// (geralmente se cancela um chamado, mas não se apaga o registro).
-	// Mas, mantendo a funcionalidade de CRUD completo:
 	/**
 	 * Endpoint para deletar um Chamado.
 	 * Acesso restrito a ADMINS.
+	 * CORREÇÃO: Alterado para hasAnyAuthority.
 	 */
-	@PreAuthorize("hasAnyRole('ADMIN')") //REGRA DE AUTORIZAÇÃO 
+	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
 	@DeleteMapping (value = "/{id}")
 	public ResponseEntity<Void> delete(@PathVariable Integer id){
 		service.delete(id);

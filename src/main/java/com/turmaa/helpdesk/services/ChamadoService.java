@@ -66,7 +66,11 @@ public class ChamadoService {
 		oldObj.setObservacoes(objDTO.getObservacoes());
 		
 		// Associa o técnico e o cliente (caso tenham sido alterados).
-		oldObj.setTecnico(tecnicoService.findById(objDTO.getTecnicoId()));
+		// Verifica se o tecnicoId veio no DTO antes de buscar
+		if(objDTO.getTecnicoId() != null) {
+			oldObj.setTecnico(tecnicoService.findById(objDTO.getTecnicoId()));
+		}
+		
 		oldObj.setCliente(clienteService.findById(objDTO.getClienteId()));
 		
 		// Aplica a regra de negócio para data de fechamento.
@@ -82,7 +86,12 @@ public class ChamadoService {
 	 * Usado apenas no método create.
 	 */
 	private Chamado newChamado(ChamadoDTO objDTO) {
-		Tecnico tecnico = tecnicoService.findById(objDTO.getTecnicoId());
+		// CORREÇÃO: Verifica se o ID do técnico é nulo antes de buscar
+		Tecnico tecnico = null;
+		if(objDTO.getTecnicoId() != null) {
+			tecnico = tecnicoService.findById(objDTO.getTecnicoId());
+		}
+		
 		Cliente cliente = clienteService.findById(objDTO.getClienteId());
 		
 		Chamado chamado = new Chamado();

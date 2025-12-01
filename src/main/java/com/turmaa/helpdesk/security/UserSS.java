@@ -3,87 +3,54 @@ package com.turmaa.helpdesk.security;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import com.turmaa.helpdesk.domains.enums.Perfil;
 
 /**
- * Implementação personalizada de {@link UserDetails} para integração com o Spring Security.
- *
- * <p>
- * Esta classe representa o usuário autenticado no sistema, armazenando:
- * <ul>
- *   <li>ID do usuário</li>
- *   <li>Email (username)</li>
- *   <li>Senha</li>
- *   <li>Perfis/roles convertidos em {@link GrantedAuthority}</li>
- * </ul>
- * </p>
- *
- * <p>
- * É usada pelo Spring Security durante a autenticação e autorização,
- * permitindo verificar credenciais e permissões.
- * </p>
+ * Classe que implementa a interface UserDetails do Spring Security.
+ * Ela serve como um "adaptador" entre a entidade Pessoa (do nosso domínio)
+ * e o usuário que o Spring Security entende, fornecendo as credenciais
+ * e permissões de forma padronizada.
  */
 public class UserSS implements UserDetails {
-
-    /** Serial para controle de versão da classe em operações de serialização. */
     private static final long serialVersionUID = 1L;
 
-    /** Identificador único do usuário no banco de dados. */
-    private final Integer id;
-
-    /** E-mail do usuário, utilizado como username para login. */
-    private final String email;
-
-    /** Senha criptografada do usuário. */
-    private final String senha;
-
+    private Integer id;
+    private String email;
+    private String senha;
+    
     /**
-     * Coleção de autoridades (roles) do usuário.
-     * <p>
-     * Cada {@link Perfil} é convertido em {@link SimpleGrantedAuthority},
-     * que é a representação padrão de permissões no Spring Security.
-     * </p>
+     * Coleção de permissões (autoridades) do usuário (ex: "ROLE_ADMIN", "ROLE_CLIENTE").
      */
-    private final Collection<? extends GrantedAuthority> authorities;
+    private Collection<? extends GrantedAuthority> authorities;
 
     /**
-     * Construtor que cria uma instância de {@code UserSS}.
-     *
-     * @param id      identificador único do usuário
-     * @param email   e-mail (username) do usuário
-     * @param senha   senha criptografada do usuário
-     * @param perfis  conjunto de perfis/roles que serão convertidos em authorities
+     * Construtor que "traduz" os dados da nossa entidade Pessoa para o formato do Spring Security.
+     * @param id O ID da Pessoa.
+     * @param email O email da Pessoa (será o 'username').
+     * @param senha A senha Criptografada da Pessoa.
+     * @param perfis O conjunto de Enums Perfil da Pessoa.
      */
     public UserSS(Integer id, String email, String senha, Set<Perfil> perfis) {
         super();
         this.id = id;
         this.email = email;
         this.senha = senha;
-        // Converte cada Perfil em SimpleGrantedAuthority usando a descrição do enum
+        // Converte o nosso Set<Perfil> em um Set<SimpleGrantedAuthority>
+        // O Spring Security usa a descrição (ex: "ROLE_ADMIN") para checar as permissões.
         this.authorities = perfis.stream()
                                  .map(x -> new SimpleGrantedAuthority(x.getDescricao()))
                                  .collect(Collectors.toSet());
     }
 
-    /**
-     * Retorna o identificador único do usuário.
-     *
-     * @return ID do usuário
-     */
     public Integer getId() {
         return id;
     }
 
     /**
-     * Retorna as autoridades (roles) concedidas ao usuário.
-     * <p>Necessário para verificação de permissões pelo Spring Security.</p>
-     *
-     * @return coleção de {@link GrantedAuthority}
+     * Retorna as permissões (perfis) do usuário.
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -91,10 +58,7 @@ public class UserSS implements UserDetails {
     }
 
     /**
-     * Retorna a senha do usuário.
-     * <p>O Spring Security usa este valor para comparar com a senha informada no login.</p>
-     *
-     * @return senha criptografada
+     * Retorna a senha criptografada do usuário.
      */
     @Override
     public String getPassword() {
@@ -102,9 +66,7 @@ public class UserSS implements UserDetails {
     }
 
     /**
-     * Retorna o nome de usuário, que aqui é o e-mail.
-     *
-     * @return e-mail do usuário
+     * Retorna o nome de usuário (para o Spring Security, usamos o email).
      */
     @Override
     public String getUsername() {
@@ -112,10 +74,8 @@ public class UserSS implements UserDetails {
     }
 
     /**
-     * Indica se a conta está expirada.
-     * <p>Aqui sempre retorna {@code true}, significando que nunca expira.</p>
-     *
-     * @return {@code true} (conta não expirada)
+     * Indica se a conta do usuário não expirou.
+     * (Para este projeto, está sempre ativa).
      */
     @Override
     public boolean isAccountNonExpired() {
@@ -123,10 +83,8 @@ public class UserSS implements UserDetails {
     }
 
     /**
-     * Indica se a conta está bloqueada.
-     * <p>Aqui sempre retorna {@code true}, significando que nunca é bloqueada.</p>
-     *
-     * @return {@code true} (conta não bloqueada)
+     * Indica se a conta do usuário não está bloqueada.
+     * (Para este projeto, está sempre ativa).
      */
     @Override
     public boolean isAccountNonLocked() {
@@ -134,10 +92,8 @@ public class UserSS implements UserDetails {
     }
 
     /**
-     * Indica se as credenciais (senha) estão expiradas.
-     * <p>Aqui sempre retorna {@code true}, significando que nunca expiram.</p>
-     *
-     * @return {@code true} (credenciais não expiradas)
+     * Indica se as credenciais (senha) do usuário não expiraram.
+     * (Para este projeto, estão sempre ativas).
      */
     @Override
     public boolean isCredentialsNonExpired() {
@@ -145,10 +101,8 @@ public class UserSS implements UserDetails {
     }
 
     /**
-     * Indica se a conta está habilitada.
-     * <p>Aqui sempre retorna {@code true}, significando que a conta está sempre ativa.</p>
-     *
-     * @return {@code true} (conta habilitada)
+     * Indica se o usuário está habilitado.
+     * (Para este projeto, está sempre ativo).
      */
     @Override
     public boolean isEnabled() {

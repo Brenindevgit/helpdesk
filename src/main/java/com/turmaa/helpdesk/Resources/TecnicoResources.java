@@ -16,6 +16,10 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+/**
+ * Controller REST para o recurso 'Técnico'.
+ * Expõe os endpoints (URLs) para as operações de CRUD relacionadas à entidade Tecnico.
+ */
 @RestController
 @RequestMapping(value = "/tecnicos")
 public class TecnicoResources {
@@ -23,7 +27,10 @@ public class TecnicoResources {
     @Autowired
     private TecnicoService service;
     
-    // Qualquer usuário autenticado pode buscar um técnico pelo ID.
+    /**
+     * Endpoint para buscar um Técnico por seu ID.
+     * Aberto para qualquer usuário autenticado.
+     */
     @GetMapping(value = "/{id}")
     public ResponseEntity<TecnicoDTO> findById(@PathVariable Integer id) {
         Tecnico obj = service.findById(id);
@@ -31,8 +38,11 @@ public class TecnicoResources {
     }
 
     
-    // Defini que apenas usuários com perfil de ADMIN podem ver a lista de TODOS os técnicos.
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    /**
+     * Endpoint para listar todos os Técnicos.
+     * CORREÇÃO: Alterado para hasAnyAuthority para checar a permissão exata ('ROLE_ADMIN').
+     */
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<List<TecnicoDTO>> findAll() {
         List<Tecnico> list = service.findAll();
@@ -41,8 +51,12 @@ public class TecnicoResources {
     }
     
     
-    // Defini que apenas usuários com perfil de ADMIN podem criar novos técnicos.
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    /**
+     * Endpoint para criar um novo Técnico.
+     * Acesso restrito a usuários com perfil 'ADMIN'.
+     * CORREÇÃO: Alterado para hasAnyAuthority.
+     */
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<TecnicoDTO> create(@Valid @RequestBody TecnicoDTO objDTO) {
         Tecnico newObj = service.create(objDTO);
@@ -51,8 +65,12 @@ public class TecnicoResources {
     }
 
      
-    // Defini que apenas usuários com perfil de ADMIN podem atualizar dados de técnicos.
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    /**
+     * Endpoint para atualizar um Técnico existente.
+     * Acesso restrito a usuários com perfil 'ADMIN'.
+     * CORREÇÃO: Alterado para hasAnyAuthority.
+     */
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @PutMapping(value = "/{id}")
     public ResponseEntity<TecnicoDTO> update(@PathVariable Integer id, @Valid @RequestBody TecnicoDTO objDTO) {
         Tecnico obj = service.update(id, objDTO);
@@ -60,8 +78,12 @@ public class TecnicoResources {
     }
 
     
-    // Defini que apenas usuários com perfil de ADMIN podem deletar técnicos.
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    /**
+     * Endpoint para deletar um Técnico.
+     * Acesso restrito a usuários com perfil 'ADMIN'.
+     * CORREÇÃO: Alterado para hasAnyAuthority.
+     */
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         service.delete(id);

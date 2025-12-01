@@ -7,7 +7,14 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.turmaa.helpdesk.domain.Cliente;
@@ -24,6 +31,10 @@ public class ClienteResources {
     @Autowired
     private ClienteService service;
 
+    /**
+     * Endpoint para buscar um Cliente por ID.
+     * Como não há @PreAuthorize, qualquer usuário autenticado pode acessar.
+     */
     @GetMapping(value = "/{id}")
     public ResponseEntity<ClienteDTO> findById(@PathVariable Integer id) {
         Cliente obj = service.findById(id);
@@ -32,9 +43,10 @@ public class ClienteResources {
     
     /**
      * Endpoint para listar todos os Clientes.
-     * Acesso permitido para usuários com perfil 'ADMIN' ou 'TECNICO'.
+     * CORREÇÃO: Usamos hasAnyAuthority para checar a permissão exata ('ROLE_ADMIN')
+     * sem adicionar um prefixo 'ROLE_' duplicado.
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TECNICO')")
     @GetMapping
     public ResponseEntity<List<ClienteDTO>> findAll() {
         List<Cliente> list = service.findAll();
@@ -44,9 +56,9 @@ public class ClienteResources {
 
     /**
      * Endpoint para criar um novo Cliente.
-     * Acesso permitido para 'ADMIN' ou 'TECNICO'.
+     * CORREÇÃO: Usamos hasAnyAuthority.
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TECNICO')")
     @PostMapping
     public ResponseEntity<ClienteDTO> create(@Valid @RequestBody ClienteDTO objDTO) {
         Cliente newObj = service.create(objDTO);
@@ -56,9 +68,9 @@ public class ClienteResources {
 
     /**
      * Endpoint para atualizar um Cliente.
-     * Acesso permitido para 'ADMIN' ou 'TECNICO'.
+     * CORREÇÃO: Usamos hasAnyAuthority.
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TECNICO')")
     @PutMapping(value = "/{id}")
     public ResponseEntity<ClienteDTO> update(@PathVariable Integer id, @Valid @RequestBody ClienteDTO objDTO) {
         Cliente obj = service.update(id, objDTO);
@@ -67,9 +79,9 @@ public class ClienteResources {
     
     /**
      * Endpoint para deletar um Cliente.
-     * Acesso permitido para 'ADMIN' ou 'TECNICO'.
+     * CORREÇÃO: Usamos hasAnyAuthority.
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TECNICO')")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         service.delete(id);

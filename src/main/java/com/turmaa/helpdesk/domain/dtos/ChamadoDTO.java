@@ -41,8 +41,8 @@ public class ChamadoDTO implements Serializable {
 
 	/**
      * ID do técnico associado. Na criação, a API recebe apenas o ID.
+     * REMOVIDO @NotNull para permitir criação pelo cliente sem técnico definido.
      */
-	@NotNull(message = "O campo TÉCNICO é requerido")
 	private Integer tecnicoId;
     /**
      * Nome do técnico, usado para facilitar a exibição dos dados no front-end
@@ -81,8 +81,13 @@ public class ChamadoDTO implements Serializable {
 		this.nomeStatus = obj.getStatus().getDescricao();
 		this.titulo = obj.getTitulo();
 		this.observacoes = obj.getObservacoes();
-		this.tecnicoId = obj.getTecnico().getId();
-		this.nomeTecnico = obj.getTecnico().getNome();
+		
+		// Ajuste para evitar NullPointerException se o técnico for nulo
+		if (obj.getTecnico() != null) {
+			this.tecnicoId = obj.getTecnico().getId();
+			this.nomeTecnico = obj.getTecnico().getNome();
+		}
+		
 		this.clienteId = obj.getCliente().getId();
 		this.nomeCliente = obj.getCliente().getNome();
 	}
